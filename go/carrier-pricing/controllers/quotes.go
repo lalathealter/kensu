@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"errors"
+	"math"
 	"net/http"
 	"strconv"
 )
@@ -17,9 +18,10 @@ func HandleQuotes(w http.ResponseWriter, r *http.Request) {
 }
 
 type QuoteInputModel struct {
-	PickupPC   string `json:"pickup_postcode"`
-	DeliveryPC string `json:"delivery_postcode"`
-	Price      int    `json:"price"`
+	PickupPC   string      `json:"pickup_postcode"`
+	DeliveryPC string      `json:"delivery_postcode"`
+	Vehicle    VehicleType `json:"vehicle"`
+	Price      int         `json:"price"`
 }
 
 func handlePostQuotes(w http.ResponseWriter, r *http.Request) {
@@ -56,10 +58,50 @@ func (q QuoteInputModel) DeduceChargePrice() (int, error) {
 	if diff < 0 {
 		diff = -diff
 	}
+	f, err := q.GetVehiclePriceFactor()
+	diff = applyPriceFactor(diff, f)
 	return diff, err
 }
 
+func applyPriceFactor(p int, f float64) int {
+	return int(math.Round(float64(p) * f))
+}
+
 const POSTCODE_BASE = 36
+
+type VehicleType string
+
+const (
+	Basic     VehicleType = ""
+	Bicycle   VehicleType = "bicycle"
+	Motorbike VehicleType = "motorbike"
+	ParcelCar VehicleType = "parcel_car"
+	SmallVan  VehicleType = "small_van"
+	LargeVan  VehicleType = "large_van"
+)
+
+var ErrVehicleTypeNotSupported = errors.New("Provided vehicle type isn't supported by this API;")
+
+func (qinp QuoteInputModel) GetVehiclePriceFactor() (factor float64, err error) {
+	factor = 1.00
+	switch qinp.Vehicle {
+	case Basic:
+	case Bicycle:
+		factor += .10
+	case Motorbike:
+		factor += .15
+	case ParcelCar:
+		factor += .20
+	case SmallVan:
+		factor += .30
+	case LargeVan:
+		factor += .40
+	default:
+		err = ErrVehicleTypeNotSupported
+	}
+
+	return factor, err
+}
 
 var ErrWrongfulIntConversion = errors.New("Couldn't rightfully convert to general Integer type")
 
