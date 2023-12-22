@@ -5,21 +5,21 @@ import "errors"
 type VehicleType string
 
 func (v VehicleType) IsSupported() bool {
-  switch v {
-  case Basic:
-  case Bicycle:
-  case Motorbike:
-  case ParcelCar:
-  case SmallVan:
-  case LargeVan:
-  default:
-  return false
-  }
-  return true
+	switch v {
+	case Basic:
+	case Bicycle:
+	case Motorbike:
+	case ParcelCar:
+	case SmallVan:
+	case LargeVan:
+	default:
+		return false
+	}
+	return true
 }
 
 const (
-	Basic     VehicleType = ""
+	Basic     VehicleType = "basic"
 	Bicycle   VehicleType = "bicycle"
 	Motorbike VehicleType = "motorbike"
 	ParcelCar VehicleType = "parcel_car"
@@ -36,14 +36,14 @@ var getServicesSQLTemp = `
 var ErrVehicleTypeNotSupported = errors.New("Provided vehicle type isn't supported by this API;")
 
 func (vh VehicleType) FindServices() ([]CarrierServiceRow, error) {
-  if !vh.IsSupported() {
-    return nil, ErrVehicleTypeNotSupported
-  }
+	if !vh.IsSupported() {
+		return nil, ErrVehicleTypeNotSupported
+	}
 	db := Get()
 	rows, err := db.Query(getServicesSQLTemp, vh)
 	if err != nil {
 		return nil, err
-  }
+	}
 	defer rows.Close()
 
 	out := make([]CarrierServiceRow, 0)
