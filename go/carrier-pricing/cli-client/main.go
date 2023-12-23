@@ -13,18 +13,31 @@ import (
 
 const contentTypeJson = "application/json"
 
+type QuoteBody map[string]string
+
+var inputTokens = [3]string{PickPS, DelPS, Vehicle}
+var (
+	PickPS  = `pickup_postcode`
+	DelPS   = `delivery_postcode`
+	Vehicle = `vehicle`
+)
+
 func main() {
 	fmt.Println("cli-client v1.0.0")
 
-	address := GetTargetAddress()
+	var addrI string
+	GetInputWith(&addrI, "Enter an address to connect to:")
+	address := clampAddress(addrI)
+	pingAddress(address)
 	var PostQuoteRequest = BindPostQuoteRequest(address)
 
 	for {
 
-		qb, err := FormQuoteBody()
-		if err != nil {
-			fmt.Println("failed to form a request body:", err)
-			continue
+		qb := QuoteBody{}
+		for _, token := range inputTokens {
+			var inpVal string
+			GetInputWith(&inpVal, "ENTER "+token)
+			qb[token] = inpVal
 		}
 
 		res, err := PostQuoteRequest(qb)
@@ -56,33 +69,9 @@ func BindGetInputWith() func(*string, string) {
 	}
 }
 
-type QuoteBody map[string]string
-
-var (
-	PickPS  = `pickup_postcode`
-	DelPS   = `delivery_postcode`
-	Vehicle = `vehicle`
-)
-
-var inputTokens = [3]string{PickPS, DelPS, Vehicle}
-
-func FormQuoteBody() (QuoteBody, error) {
-	qb := make(map[string]string, len(inputTokens))
-
-	for _, token := range inputTokens {
-		var inpVal string
-		GetInputWith(&inpVal, "ENTER "+token)
-		qb[token] = inpVal
-	}
-
-	return qb, nil
-}
-
 const LOCAL_TEST_ADDR = "localhost:8080/quotes"
 
-func GetTargetAddress() string {
-	var addr string
-	GetInputWith(&addr, "Enter an address to connect to:")
+func clampAddress(addr string) string {
 	if addr == "" {
 		addr = LOCAL_TEST_ADDR
 	}
@@ -91,13 +80,11 @@ func GetTargetAddress() string {
 		addr = "http://" + addr
 	}
 
-	pingAddress(addr)
-
 	return addr
 }
 
 func hasNoHTTPScheme(addr string) bool {
-	return !strings.HasPrefix(addr, "https://") || !strings.HasPrefix(addr, "http://")
+	return !strings.HasPrefix(addr, "https://") && !strings.HasPrefix(addr, "http://")
 }
 
 func pingAddress(addr string) {
