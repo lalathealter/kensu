@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/lalathealter/kensu/db"
+	"github.com/lalathealter/kensu/server/db"
 )
 
 type QuoteInputModel struct {

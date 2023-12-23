@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/lalathealter/kensu/controllers"
+	"github.com/lalathealter/kensu/server/controllers"
 )
 
 const (
