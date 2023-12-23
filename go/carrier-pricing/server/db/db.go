@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/joho/godotenv"
 	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 )
@@ -20,14 +19,9 @@ func BindDB(db *sql.DB) func() *sql.DB {
 
 var Get func() *sql.DB
 
-func init() {
-	dbInstance := initDB()
-	Get = BindDB(dbInstance)
-}
-
 const PRICE_LIST_JSON = "./carrier-data.json"
 
-func initDB() *sql.DB {
+func InitDB() {
 
 	db, err := sql.Open("postgres", makeConnString())
 	if err != nil {
@@ -43,7 +37,7 @@ func initDB() *sql.DB {
 		log.Fatal(err)
 	}
 
-	return db
+	Get = BindDB(db)
 }
 
 const (
@@ -55,9 +49,7 @@ const (
 )
 
 func makeConnString() string {
-	if err := godotenv.Load(); err != nil {
-		return ""
-	}
+
 	db := os.Getenv(DBkey)
 	dbhost := os.Getenv(DBHOSTkey)
 	port := os.Getenv(PORTkey)
