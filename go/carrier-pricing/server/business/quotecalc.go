@@ -71,6 +71,9 @@ func parsePostcode(pc string) (int, error) {
 	if err != nil || int64(tppc) != ppc {
 		err = ErrWrongfulIntConversion
 	}
+	if tppc < 0 {
+		tppc = -tppc
+	}
 	return tppc, err
 }
 
